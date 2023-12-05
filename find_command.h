@@ -1,7 +1,8 @@
 #include <dirent.h> // opendir, readdir, closedir. DIR
 #include <sys/stat.h> // stat, struct stat
 
-extern int *command_found;   
+extern int *command_found; 
+extern char *found_path;
 
 void trimNewline(char *str) {
     int len = strlen(str);
@@ -18,7 +19,7 @@ void findFilesRecursively(char *baseDirectory, char *file) {
 
     trimNewline(file);
 
-
+    printf("Searching for %s in %s\n", file, baseDirectory);
     // Unable to open directory stream
     if (!dir) {
        // printf("Unable to open directory stream\n");
@@ -39,6 +40,7 @@ void findFilesRecursively(char *baseDirectory, char *file) {
                 if (strcmp(dp->d_name, file) == 0) {
                     // printf("File: %s\n", path);
                     *command_found = 1;
+                    strcpy(found_path, path);
                     return;
                 }
               // printf("File: %s\n", path);
