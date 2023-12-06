@@ -3,12 +3,8 @@
 #include <stdio.h> // needed for printf()
 #include <unistd.h> // needed for fork(), exec()
 #include <pwd.h>    // needed for getpwuid()
-#include "find_command.h"
-#include "trim.h"
-
-// Global variables
-int *command_found; // flag for command found
-char *found_path; // path of the command found
+#include "helper.h"
+#include "execute.h"
 
 
 int main(){
@@ -24,8 +20,6 @@ int main(){
 
     // allocate memory
     command_found = malloc(sizeof(int));
-
-
 
     do{ 
         // initialize variables
@@ -79,6 +73,7 @@ int main(){
         // trim input
         char *token = input;
         token = trim(token);
+        printf("Trimmed input is %s\n", token);
       
         // if token length is 0, there is no input. Ignore the rest
         if (strlen(token) == 0) {
@@ -142,56 +137,60 @@ int main(){
                 }
             }
             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Execute ------------------------------------------
-
-            // --------------------- cd ---------------------
-            if (strcmp(command, "cd") == 0) {
-                
-                if (arg_count > 2){
-                    // TODO : error handler
-                    fprintf(stderr, "cd: too many arguments\n");
-                }
-                else if (arg_count == 2){
-                    int result = chdir(args[1]);
-                    if (result == -1){
+            if (*command_found) {
+            
+                // --------------------- cd ---------------------
+                if (strcmp(command, "cd") == 0) {
+                    
+                    if (arg_count > 2){
                         // TODO : error handler
-                        fprintf(stderr, "cd: no such file or directory: %s\n", args[1]);
+                        fprintf(stderr, "cd: too many arguments\n");
                     }
-                }
-                else{
-                    char *home = getenv("HOME");
-                    int result = chdir(home);
-                    if (result == -1){
-                        // TODO : error handler
-                        fprintf(stderr, "cannot get environment variable HOME\n");
+                    else if (arg_count == 2){
+                        int result = chdir(args[1]);
+                        if (result == -1){
+                            // TODO : error handler
+                            fprintf(stderr, "cd: no such file or directory: %s\n", args[1]);
+                        }
                     }
+                    else{
+                        char *home = getenv("HOME");
+                        int result = chdir(home);
+                        if (result == -1){
+                            // TODO : error handler
+                            fprintf(stderr, "cannot get environment variable HOME\n");
+                        }
+                    }
+                    continue;
                 }
-                continue;
-            }
-            // --------------------- cd ---------------------
+                // --------------------- cd ---------------------
 
-            pid_t pid;
-            pid = fork();
+                execute(found_path, args);
+                // pid_t pid;
+                // pid = fork();
 
-            if (pid < 0){
-                // TODO : error handler
-                fprintf(stderr, "Fork Failed");
-                return 1;
-            }
-            else if (pid == 0){
-               execv(found_path, args);
-               //execvp(command, args);
-            }
-            else{
-                wait(NULL);
-            }
+                // if (pid < 0){
+                //     // TODO : error handler
+                //     fprintf(stderr, "Fork Failed");
+                //     return 1;
+                // }
+                // else if (pid == 0){
+                // execv(found_path, args);
+                // printf("Command not found\n");
+                // continue;
+                // //execvp(command, args);
+                // }
+                // else{
+                //     wait(NULL);
+                // }
             // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+            }
         }
         
         // free memory
         free(found_path);
         free(original_path);
-     
+
     } while(comparison);
 
     free(command_found);

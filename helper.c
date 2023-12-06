@@ -1,8 +1,8 @@
 #include "helper.h"
 
 
-extern int *command_found; 
-extern char *found_path;
+int *command_found; 
+char *found_path;
 
 
 void findFilesRecursively(char *baseDirectory, char *file) {

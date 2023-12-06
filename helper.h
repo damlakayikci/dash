@@ -1,5 +1,5 @@
-#ifndef TRIM_H
-#define TRIM_H
+#ifndef HELPER_H
+#define HELPER_H
 
 #include <stdio.h> // needed for printf()
 #include <string.h> // needed for strlen()
@@ -7,6 +7,7 @@
 #include <dirent.h> // opendir, readdir, closedir. DIR
 #include <sys/stat.h> // stat, struct stat
 
+// Global variables
 extern int *command_found; 
 extern char *found_path;
 
