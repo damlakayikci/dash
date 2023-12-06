@@ -8,13 +8,6 @@
 extern int *command_found; 
 extern char *found_path;
 
-void trimNewline(char *str) {
-    int len = strlen(str);
-    if (len > 0 && str[len - 1] == '\n') {
-        str[len - 1] = '\0';
-    }
-}
-
 
 void findFilesRecursively(char *baseDirectory, char *file) {
     char path[1000];
