@@ -11,7 +11,7 @@ INCLUDES =
 LIBS =
 
 # Define the source files
-SRCS = dash.c find_command.c trim.c
+SRCS = dash.c helper.c execute.c
 
 # Define the object files
 OBJS = $(SRCS:.c=.o)
