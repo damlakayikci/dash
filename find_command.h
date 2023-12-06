@@ -1,3 +1,6 @@
+#ifndef FIND_COMMAND_H
+#define FIND_COMMAND_H
+
 #include <dirent.h> // opendir, readdir, closedir. DIR
 #include <sys/stat.h> // stat, struct stat
 
@@ -8,3 +11,5 @@ void trimNewline(char *str);
 
 
 void findFilesRecursively(char *baseDirectory, char *file);
+
+#endif
