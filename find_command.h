@@ -7,9 +7,6 @@
 extern int *command_found; 
 extern char *found_path;
 
-void trimNewline(char *str);
-
-
 void findFilesRecursively(char *baseDirectory, char *file);
 
 #endif

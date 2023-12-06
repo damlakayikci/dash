@@ -3,6 +3,7 @@
 #include <string.h> // needed for strlen()
 #include <stdio.h> // needed for printf()
 #include "find_command.h"
+#include "trim.h"
 
 extern int *command_found; 
 extern char *found_path;
@@ -20,9 +21,9 @@ void findFilesRecursively(char *baseDirectory, char *file) {
     struct dirent *dp;
     DIR *dir = opendir(baseDirectory);
 
-    trimNewline(file);
+    file = trim(file);
 
-    printf("Searching for %s in %s\n", file, baseDirectory);
+    // printf("Searching for %s in %s\n", file, baseDirectory);
     // Unable to open directory stream
     if (!dir) {
        // printf("Unable to open directory stream\n");
