@@ -25,6 +25,7 @@ int main(){
         // initialize variables
         *command_found = 0;
         found_path = (char *) malloc(1024 * sizeof(char));
+        arg_count = 0;
 
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PATH variable --------------------------------------
         char *original_path = strdup(getenv("PATH")); // !!! PATH burada farkli sirada geliyor
@@ -71,30 +72,32 @@ int main(){
         fgets(input, sizeof(input), stdin);
 
         // trim input
+        char *original_input = strdup(input); // save original input for echo
+        printf("Length of input is %lu\n", strlen(input));
         char *token = input;
         token = trim(token);
         printf("Trimmed input is %s\n", token);
       
         // if token length is 0, there is no input. Ignore the rest
         if (strlen(token) == 0) {
-            // TODO : remove this
-            printf("________________ No input\n");
-            // TODO : remove this
             continue;
         }
 
         // tokenize input
         token = strtok(token, " ");
-        arg_count = 0;
 
         // get the first token as command and check if it is exit
-        command = token;
-        command = trim(command);
+        command = trim(token);
         comparison = strcmp(command, "exit"); 
 
 
         // if command is not exit
         if (comparison) {
+            if (strcmp(command, "echo") == 0) {
+                echo(original_input, strlen(original_input));
+                continue;
+            }
+
             while (token != NULL) {
                 // trim token
                 token = trim(token);
@@ -123,25 +126,22 @@ int main(){
 
             // ------------------------------------------ Input >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                
-            // traverse through paths
-            for (int i = 0; i < path_count; i++) {
-                // find command in path
-                // printf("Searching in %s\n", paths[i]);
-                findFilesRecursively(paths[i], command);
-                if (*command_found) {
-                    // TODO : remove this
-                    printf("Command found in %s\n", paths[i]);
-                    printf("Command is %s\n", found_path);
-                    // TODO : remove this
-                    break;
-                }
+            if (strcmp(command, "bello") == 0) {
+                bello();
+                continue;
             }
+            else if (strcmp(command, "echo") == 0){
+                echo(original_input, strlen(original_input));
+                continue;
+            }
+            // traverse through paths
+            findCommandInPath(command, paths, path_count);
+
             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Execute ------------------------------------------
             if (*command_found) {
             
                 // --------------------- cd ---------------------
                 if (strcmp(command, "cd") == 0) {
-                    
                     if (arg_count > 2){
                         // TODO : error handler
                         fprintf(stderr, "cd: too many arguments\n");
@@ -164,25 +164,9 @@ int main(){
                     continue;
                 }
                 // --------------------- cd ---------------------
-
+                
                 execute(found_path, args);
-                // pid_t pid;
-                // pid = fork();
 
-                // if (pid < 0){
-                //     // TODO : error handler
-                //     fprintf(stderr, "Fork Failed");
-                //     return 1;
-                // }
-                // else if (pid == 0){
-                // execv(found_path, args);
-                // printf("Command not found\n");
-                // continue;
-                // //execvp(command, args);
-                // }
-                // else{
-                //     wait(NULL);
-                // }
             // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             }
         }

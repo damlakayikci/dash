@@ -4,6 +4,18 @@
 int *command_found; 
 char *found_path;
 
+void findCommandInPath(char *command, char *paths[], int path_count) {
+    for (int i = 0; i < path_count; i++) {
+        findFilesRecursively(paths[i], command);
+        if (*command_found) {
+            // TODO : remove this
+            printf("Command found in %s\n", paths[i]);
+            printf("Command is %s\n", found_path);
+            // TODO : remove this
+            break;
+        }
+    }
+}
 
 void findFilesRecursively(char *baseDirectory, char *file) {
     char path[1000];
