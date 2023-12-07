@@ -46,85 +46,75 @@ char* string_in_reverse(char *input){
     return inverse;
 }
 
+void write_to_file(char *input, int index, int mode, int reversed){
+    // initialize variables
+    int input_length = strlen(input);
+    int text_length = index - 5;
+    char *text = malloc(index);
+    char *file_name = malloc(input_length);
+    FILE *file_pointer;
+    const char *modes[2] = {"w\0", "a\0"};
+        
+    // get text & null terminate
+    strncpy(text, input + 5, text_length);
+    printf("text: %s\n", text);
+    text[text_length] = '\0';
+    printf("text: %s\n", text);
+
+    if (reversed){
+        text = string_in_reverse(text);
+        printf("text: %s\n", text);
+        index = index + 3;
+    } else {
+        index = index + mode + 1;
+    } 
+   // text = trim(text);
+
+    // get file name & no need to null terminate since length is longer than available characters
+    strncpy(file_name, input + index, input_length - index);
+    printf("file_name: %s\n", file_name);
+
+    file_pointer = fopen(file_name, modes[mode]);
+    printf("file_pointer: %p\n", file_pointer);
+    fprintf(file_pointer, "%s\n", text);
+    fclose(file_pointer);
+
+    // free memory
+    free(text);
+    free(file_name);
+
+}
+
 // TODO : !!! TTY & empty string & free memory strdups 
 void echo(char *input, int length){
+    char *check = malloc(length);
+   // char *env = malloc(length);
+    int check_index;
 
-    // <<<<<<<<<<<<<<<<<<<< triple redirect ---------------------
-    char *triple_redirect = strstr(input, ">>>");
-    int triple_redirect_index = triple_redirect - input;
-    // printf("triple_redirect_index: %d\n", triple_redirect_index);
-    if ((triple_redirect_index < length ) && (triple_redirect_index > 0)) {
-        char *write_this = malloc(triple_redirect_index - 4);
-        char *reversed_string = malloc(triple_redirect_index - 4);
-        char *append_to = malloc(length - triple_redirect_index - 1);
-        FILE *fptr;
-        strncpy(write_this, input + 5, triple_redirect_index - 5);
-        // null terminate
-        write_this[triple_redirect_index - 5] = '\0';
-        reversed_string = string_in_reverse(write_this);
-        strncpy(append_to, input + triple_redirect_index + 3, length - triple_redirect_index - 3);
-        // null terminate
-        append_to[length - triple_redirect_index - 3] = '\0';
-        fptr = fopen(append_to, "a");
-        fprintf(fptr, "%s\n", reversed_string);
-        fclose(fptr);
+    // triple redirect 
+    check = strstr(input, ">>>");
+    check_index = check - input;
+    if ((check_index < length ) && (check_index > 0)) {
+        write_to_file(input, check_index, 1, 1);
         return;
     }
-    // --------------------- triple redirect >>>>>>>>>>>>>>>>>>>>>>>
-
-    // <<<<<<<<<<<<<<<<<<<< double redirect ---------------------
-    char *double_redirect = strstr(input, ">>");
-    int double_redirect_index = double_redirect - input;
-    // printf("double_redirect_index: %d\n", double_redirect_index);
-    if ((double_redirect_index < length ) && (double_redirect_index > 0)) {
-        // initialize variables
-        FILE *fptr;
-        char *write_this = malloc(double_redirect_index - 4);
-        char *append_to = malloc(length - double_redirect_index - 1);
-
-        strncpy(write_this, input + 5, double_redirect_index - 5);
-        // null terminate
-        write_this[double_redirect_index - 5] = '\0';
+   
+    // double redirect
+    check = strstr(input, ">>");
+    check_index = check - input;
+    if ((check_index < length ) && (check_index > 0)) {
+        write_to_file(input, check_index, 1, 0);
+        return;
+    }
     
-        strncpy(append_to, input + double_redirect_index + 2, length - double_redirect_index - 2);
-        // null terminate
-        append_to[length - double_redirect_index - 2] = '\0';
-        printf("append_to: %s\n", append_to);
-
-        // Append to file
-        fptr = fopen(append_to, "a");
-        fprintf(fptr, "%s\n", write_this);
-        fclose(fptr);
-        
+    // single redirect
+    check = strstr(input, ">");
+    check_index = check - input;
+    if ((check_index < length ) && (check_index > 0)) {
+        write_to_file(input, check_index, 0, 0);
         return;
     }
-    // -------------------- double redirect >>>>>>>>>>>>>>>>>>>>>>
-
-    // <<<<<<<<<<<<<<<<<<<< single redirect ---------------------
-    char *single_redirect = strstr(input, ">");
-    int single_redirect_index = single_redirect - input;
-    // printf("single_redirect_index: %d\n", single_redirect_index);
-    if ((single_redirect_index < length ) && (single_redirect_index > 0)) {
-        // initialize variables
-        FILE *fptr;
-        char *write_this = malloc(single_redirect_index - 4);
-        char *write_to = malloc(length - single_redirect_index - 1);
-
-        strncpy(write_this, input + 5, single_redirect_index - 5);
-        // null terminate
-        write_this[single_redirect_index - 5] = '\0';
-
-        strncpy(write_to, input + single_redirect_index + 2, length - single_redirect_index - 2);
-        // null terminate
-        write_to[length - single_redirect_index - 2] = '\0';
-
-        // Write to file
-        fptr = fopen(write_to, "w");
-        fprintf(fptr, "%s\n", write_this);
-        fclose(fptr);
-        return;
-    }
-    // -------------------- single redirect >>>>>>>>>>>>>>>>>>>>>>
+    
     
     // <<<<<<<<<<<<<<<<<<<<<<<< variables -------------------------
     // assume there is only 1 variable and no quotes
@@ -153,18 +143,23 @@ void echo(char *input, int length){
         }
         args[arg_count] = NULL;
         execute( "echo", args);
-        
+
+        // free memory
+        free(env);
         return;
     }
     // ------------------------- variables >>>>>>>>>>>>>>>>>>>>>>>>>>>
     
     // <<<<<<<<<<<<<<<<<<<< other echo commands ---------------------
     char *write_this = malloc(length - 5);
-    strncpy(write_this, input + 5, length - 5);
+    strncpy(write_this, input + 5, length - 6);
     // null terminate
     write_this[length - 5] = '\0';
     execute( "echo", (char *[]){"echo", write_this, NULL});
     // --------------------- other echo commands >>>>>>>>>>>>>>>>>>>>>>
     
+    // free memory
+    free(check);
+    free(write_this);
 
 }
