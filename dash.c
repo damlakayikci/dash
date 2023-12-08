@@ -1,10 +1,9 @@
 #include <stdlib.h> // needed for getenv(), PATH
 #include <string.h> // needed for strtok()
 #include <stdio.h> // needed for printf()
-#include <unistd.h> // needed for fork(), exec()
-#include <pwd.h>    // needed for getpwuid()
 #include "helper.h"
 #include "execute.h"
+
 
 
 int main(){
@@ -42,30 +41,8 @@ int main(){
         }
         // -------------------------------------- PATH variable >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-
-        // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< user info ------------------------------------------
-        // Get current working directory
-        char cwd[1024];
-        getcwd(cwd, sizeof(cwd));
-        
-        // Get hostname
-        char hostname[1024];
-        gethostname(hostname, sizeof(hostname));
-
-        // Get username
-        uid_t uid = geteuid(); // 501
-        struct passwd *pw = getpwuid(uid);
-
-        if (pw) {
-        // Access and print the username field
-            printf("%s@%s %s --- ", pw->pw_name, hostname, cwd);
-        } else {
-            // TODO : error handler
-            fprintf(stderr, "Error retrieving password entry.\n");
-            continue;
-        } 
-        // ------------------------------------------ user info >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+        print_command_prompt();
+   
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Input ------------------------------------------
         // Get input script
         char input[1024];
@@ -168,12 +145,16 @@ int main(){
                 execute(found_path, args);
 
             // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            } else {
+                printf("%s: command not found\n", command);
             }
+
         }
         
         // free memory
         free(found_path);
         free(original_path);
+        printf("found_path and original path freed\n");
 
     } while(comparison);
 

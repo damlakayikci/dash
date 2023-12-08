@@ -6,10 +6,15 @@
 #include <ctype.h> // needed for isspace()
 #include <dirent.h> // opendir, readdir, closedir. DIR
 #include <sys/stat.h> // stat, struct stat
+#include <pwd.h>    // needed for getpwuid()
+#include <unistd.h> // needed for fork(), exec()
 
 // Global variables
 extern int *command_found; 
 extern char *found_path;
+
+
+void print_command_prompt();
 
 void findFilesRecursively(char *baseDirectory, char *file);
 

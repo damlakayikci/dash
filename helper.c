@@ -4,6 +4,29 @@
 int *command_found; 
 char *found_path;
 
+
+void print_command_prompt(){
+    // Get current working directory
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    
+    // Get hostname
+    char hostname[1024];
+    gethostname(hostname, sizeof(hostname));
+
+    // Get username
+    uid_t uid = geteuid(); // 501
+    struct passwd *pw = getpwuid(uid);
+
+    if (pw) {
+    // Access and print the username field
+        printf("%s@%s %s --- ", pw->pw_name, hostname, cwd);
+    } else {
+        // TODO : error handler
+        fprintf(stderr, "Error retrieving password entry.\n");
+    } 
+}
+
 void findCommandInPath(char *command, char *paths[], int path_count) {
     for (int i = 0; i < path_count; i++) {
         findFilesRecursively(paths[i], command);
