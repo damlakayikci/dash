@@ -39,6 +39,7 @@ int main(){
             paths[path_count++] = path_token;
             path_token = strtok(NULL, ":");
         }
+        free(original_path);
         // -------------------------------------- PATH variable >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
         print_command_prompt();
@@ -57,6 +58,8 @@ int main(){
       
         // if token length is 0, there is no input. Ignore the rest
         if (strlen(token) == 0) {
+            // free memory
+            free(found_path);
             continue;
         }
 
@@ -67,24 +70,23 @@ int main(){
         command = trim(token);
         comparison = strcmp(command, "exit"); 
 
-
         // if command is not exit
         if (comparison) {
+            // <<<<<<<<<<<<< echo ----------------
             if (strcmp(command, "echo") == 0) {
                 echo(original_input, strlen(original_input));
+                // free memory
+                free(found_path);
                 continue;
             }
+            // ------------- echo >>>>>>>>>>>>>>>>
 
+            // parse input
             while (token != NULL) {
-                // trim token
                 token = trim(token);
-
-                // if length of token is 0, ignore it
                 if (strlen(token) != 0) {
                     args[arg_count++] = token;
                 }
-
-                // get next token
                 token = strtok(NULL, " ");
             }
 
@@ -96,37 +98,34 @@ int main(){
             printf("Arg count is %d\n", arg_count);
             for (int i = 0; i < arg_count; i++) {
                 printf("Token %d is %s\n", i, args[i]);
-               // printf("Length of token %d is %lu\n", i, strlen(args[i]));
             }
             // TODO : remove this
 
 
             // ------------------------------------------ Input >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                
+            // <<<<<<<<<<<<< bello ----------------
             if (strcmp(command, "bello") == 0) {
                 bello();
+                // free memory
+                free(found_path);
                 continue;
-            }
-            else if (strcmp(command, "echo") == 0){
-                echo(original_input, strlen(original_input));
-                continue;
-            }
-            // traverse through paths
+            }  
+            // ------------- bello >>>>>>>>>>>>>>>>
+
             findCommandInPath(command, paths, path_count);
 
             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Execute ------------------------------------------
             if (*command_found) {
             
-                // --------------------- cd ---------------------
+                // <<<<<<<<<<<<<<<<< cd ---------------------
                 if (strcmp(command, "cd") == 0) {
                     if (arg_count > 2){
-                        // TODO : error handler
                         fprintf(stderr, "cd: too many arguments\n");
                     }
                     else if (arg_count == 2){
                         int result = chdir(args[1]);
                         if (result == -1){
-                            // TODO : error handler
                             fprintf(stderr, "cd: no such file or directory: %s\n", args[1]);
                         }
                     }
@@ -134,28 +133,27 @@ int main(){
                         char *home = getenv("HOME");
                         int result = chdir(home);
                         if (result == -1){
-                            // TODO : error handler
                             fprintf(stderr, "cannot get environment variable HOME\n");
                         }
                     }
+                    // free memory
+                    free(found_path);
                     continue;
                 }
-                // --------------------- cd ---------------------
+                // ---------------- cd >>>>>>>>>>>>>>>>>>>>>>
                 
                 execute(found_path, args);
 
             // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             } else {
-                printf("%s: command not found\n", command);
+                fprintf(stderr, "%s: command not found\n", command);
             }
 
         }
         
         // free memory
         free(found_path);
-        free(original_path);
-        printf("found_path and original path freed\n");
-
+        
     } while(comparison);
 
     free(command_found);
