@@ -78,7 +78,12 @@ int main() {
                 continue;
             }
             // ------------- echo >>>>>>>>>>>>>>>>
-
+            if (strcmp(command, "alias") == 0) {
+                alias(original_input, strlen(original_input));
+                // free memory
+                free(found_path);
+                continue;
+            }
             // parse input
             while (token != NULL) {
                 token = trim(token);
