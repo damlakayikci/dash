@@ -85,7 +85,6 @@ void write_to_file(char *input, int index, int mode, int reversed) {
 // TODO : !!! TTY & empty string & free memory strdups
 void echo(char *input, int length) {
     char *check = malloc(length);
-    // char *env = malloc(length);
     int check_index;
 
     // triple redirect
@@ -159,4 +158,48 @@ void echo(char *input, int length) {
     // free memory
     free(check);
     free(write_this);
+}
+
+void alias(char *input, int length) {
+    // initialize variables
+    char *alias_name = malloc(length);
+    char *alias_command = malloc(length);
+    char *token = strtok(input, "=");
+    FILE *file_pointer;
+    int arg_count = 0;
+
+    while (token != NULL) {
+        token = trim(token);
+        printf("token: %s\n", token);
+        if (arg_count > 1) {
+            fprintf(stderr, "alias: too many arguments\n");
+            free(alias_name);
+            free(alias_command);
+            return;
+        }
+        if (strlen(token) != 0) {
+            if (arg_count == 0) {
+                printf("alias name: %s\n", token);
+                strncpy(alias_name, token + 6, strlen(token));
+                // TODO trim
+                alias_name[strlen(token)] = '\0';
+            } else {
+                strncpy(alias_command, token, strlen(token));
+                alias_command[strlen(token)] = '\0';
+            }
+            arg_count++;
+        }
+        token = strtok(NULL, "=");
+    }
+
+    printf("alias_name: %s\n", alias_name);
+    printf("alias_command: %s\n", alias_command);
+
+    file_pointer = fopen("alias.txt", "a");
+    fprintf(file_pointer, "%s:%s\n", alias_name, alias_command);
+    fclose(file_pointer);
+
+    // free memory
+    free(alias_name);
+    free(alias_command);
 }
