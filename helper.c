@@ -1,15 +1,13 @@
 #include "helper.h"
 
-
-int *command_found; 
+int *command_found;
 char *found_path;
 
-
-void print_command_prompt(){
+void print_command_prompt() {
     // Get current working directory
     char cwd[1024];
     getcwd(cwd, sizeof(cwd));
-    
+
     // Get hostname
     char hostname[1024];
     gethostname(hostname, sizeof(hostname));
@@ -19,12 +17,12 @@ void print_command_prompt(){
     struct passwd *pw = getpwuid(uid);
 
     if (pw) {
-    // Access and print the username field
+        // Access and print the username field
         printf("%s@%s %s --- ", pw->pw_name, hostname, cwd);
     } else {
         // TODO : error handler
         fprintf(stderr, "Error retrieving password entry.\n");
-    } 
+    }
 }
 
 void findCommandInPath(char *command, char *paths[], int path_count) {
@@ -47,12 +45,10 @@ void findFilesRecursively(char *baseDirectory, char *file) {
 
     file = trim(file);
 
-    // printf("Searching for %s in %s\n", file, baseDirectory);
-    // Unable to open directory stream
     if (!dir) {
-       // printf("Unable to open directory stream\n");
+        fprintf(stderr, "Cannot open directory %s\n", baseDirectory);
         return;
-        }
+    }
 
     while ((dp = readdir(dir)) != NULL) {
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
@@ -63,38 +59,35 @@ void findFilesRecursively(char *baseDirectory, char *file) {
 
             struct stat path_stat;
             stat(path, &path_stat);
-            if (S_ISREG(path_stat.st_mode)) {      
-          
+            if (S_ISREG(path_stat.st_mode)) {
+
                 if (strcmp(dp->d_name, file) == 0) {
-                    // printf("File: %s\n", path);
                     *command_found = 1;
                     strcpy(found_path, path);
                     return;
                 }
-              // printf("File: %s\n", path);
             } else if (S_ISDIR(path_stat.st_mode)) {
-              // printf("Directory: %s\n", path);
                 findFilesRecursively(path, file);
             }
         }
     }
-
     closedir(dir);
 }
 
-char *ltrim(char *s){
-    while(isspace(*s)) 
+char *ltrim(char *s) {
+    while (isspace(*s))
         s++;
     return s;
 }
 
-char *rtrim(char *s){
-    char* back = s + strlen(s);
-    while(isspace(*--back));
-    *(back+1) = '\0';
+char *rtrim(char *s) {
+    char *back = s + strlen(s);
+    while (isspace(*--back))
+        ;
+    *(back + 1) = '\0';
     return s;
 }
 
-char *trim(char *s){
-    return rtrim(ltrim(s)); 
+char *trim(char *s) {
+    return rtrim(ltrim(s));
 }
