@@ -82,7 +82,7 @@ void write_to_file(char *input, int index, int mode, int reversed) {
     free(file_name);
 }
 
-// TODO : !!! TTY & empty string & free memory strdups
+// TODO : !!! TTY & empty string
 void echo(char *input, int length) {
     char *check = malloc(length);
     int check_index;
@@ -179,13 +179,32 @@ void alias(char *input, int length) {
         }
         if (strlen(token) != 0) {
             if (arg_count == 0) {
-                printf("alias name: %s\n", token);
+                printf("alias name1: %s\n", token);
                 strncpy(alias_name, token + 6, strlen(token));
-                // TODO trim
-                alias_name[strlen(token)] = '\0';
+                printf("alias name2: %s\n", alias_name);
+                char *trimmed = trim(alias_name);
+                printf("alias name3: %s\n", trimmed);
+                strncpy(alias_name, trimmed, strlen(trimmed));
+                alias_name[strlen(trimmed)] = '\0';
+                printf("alias name4: %s\n", alias_name);
+                if (strlen(alias_name) == 0) {
+                    fprintf(stderr, "alias: invalid alias name\n");
+                    free(alias_name);
+                    free(alias_command);
+                    return;
+                }
             } else {
                 strncpy(alias_command, token, strlen(token));
-                alias_command[strlen(token)] = '\0';
+                char *trimmed = trim(alias_command);
+                strncpy(alias_command, trimmed, strlen(trimmed));
+                alias_command[strlen(trimmed)] = '\0';
+                // if the command doesnt start and end with quotes, it is invalid
+                if ((alias_command[0] != '"') || (alias_command[strlen(alias_command) - 1] != '"')) {
+                    fprintf(stderr, "alias: invalid command format\n");
+                    free(alias_name);
+                    free(alias_command);
+                    return;
+                }
             }
             arg_count++;
         }
