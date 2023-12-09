@@ -1,30 +1,27 @@
+#include "execute.h"
+#include "helper.h"
+#include <stdio.h>  // needed for printf()
 #include <stdlib.h> // needed for getenv(), PATH
 #include <string.h> // needed for strtok()
-#include <stdio.h> // needed for printf()
-#include <unistd.h> // needed for fork(), exec()
-#include <pwd.h>    // needed for getpwuid()
-#include "helper.h"
-#include "execute.h"
 
-
-int main(){
+int main() {
     // initialize variables
-    int path_count;    // number of paths in PATH
-    int arg_count;     // number of arguments
-    char *paths[100];  // array of paths in PATH
-    char *args[40];    // array of arguments
-    char *path;        // PATH variable to be parsed
-    char *path_token;  
-    char *command;     // command to be executed
-    int comparison;    // comparison of exit and command
+    int path_count;   // number of paths in PATH
+    int arg_count;    // number of arguments
+    char *paths[100]; // array of paths in PATH
+    char *args[40];   // array of arguments
+    char *path;       // PATH variable to be parsed
+    char *path_token;
+    char *command;  // command to be executed
+    int comparison; // comparison of exit and command
 
     // allocate memory
     command_found = malloc(sizeof(int));
 
-    do{ 
+    do {
         // initialize variables
         *command_found = 0;
-        found_path = (char *) malloc(1024 * sizeof(char));
+        found_path = (char *)malloc(1024 * sizeof(char));
         arg_count = 0;
 
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PATH variable --------------------------------------
@@ -40,31 +37,10 @@ int main(){
             paths[path_count++] = path_token;
             path_token = strtok(NULL, ":");
         }
+        free(original_path);
         // -------------------------------------- PATH variable >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-
-        // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< user info ------------------------------------------
-        // Get current working directory
-        char cwd[1024];
-        getcwd(cwd, sizeof(cwd));
-        
-        // Get hostname
-        char hostname[1024];
-        gethostname(hostname, sizeof(hostname));
-
-        // Get username
-        uid_t uid = geteuid(); // 501
-        struct passwd *pw = getpwuid(uid);
-
-        if (pw) {
-        // Access and print the username field
-            printf("%s@%s %s --- ", pw->pw_name, hostname, cwd);
-        } else {
-            // TODO : error handler
-            fprintf(stderr, "Error retrieving password entry.\n");
-            continue;
-        } 
-        // ------------------------------------------ user info >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        print_command_prompt();
 
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Input ------------------------------------------
         // Get input script
@@ -77,9 +53,11 @@ int main(){
         char *token = input;
         token = trim(token);
         printf("Trimmed input is %s\n", token);
-      
+
         // if token length is 0, there is no input. Ignore the rest
         if (strlen(token) == 0) {
+            // free memory
+            free(found_path);
             continue;
         }
 
@@ -88,94 +66,81 @@ int main(){
 
         // get the first token as command and check if it is exit
         command = trim(token);
-        comparison = strcmp(command, "exit"); 
-
+        comparison = strcmp(command, "exit");
 
         // if command is not exit
         if (comparison) {
+            // <<<<<<<<<<<<< echo ----------------
             if (strcmp(command, "echo") == 0) {
                 echo(original_input, strlen(original_input));
+                // free memory
+                free(found_path);
                 continue;
             }
+            // ------------- echo >>>>>>>>>>>>>>>>
 
+            // parse input
             while (token != NULL) {
-                // trim token
                 token = trim(token);
-
-                // if length of token is 0, ignore it
                 if (strlen(token) != 0) {
                     args[arg_count++] = token;
                 }
-
-                // get next token
                 token = strtok(NULL, " ");
             }
 
             // null terminate args
             args[arg_count] = NULL;
 
-            // TODO : remove this
-            printf("------------------------------ HERE ARE THE ARGUMENTS ------------------------------\n");
-            printf("Arg count is %d\n", arg_count);
-            for (int i = 0; i < arg_count; i++) {
-                printf("Token %d is %s\n", i, args[i]);
-               // printf("Length of token %d is %lu\n", i, strlen(args[i]));
-            }
-            // TODO : remove this
-
-
             // ------------------------------------------ Input >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-               
+
+            // <<<<<<<<<<<<< bello ----------------
             if (strcmp(command, "bello") == 0) {
                 bello();
+                // free memory
+                free(found_path);
                 continue;
             }
-            else if (strcmp(command, "echo") == 0){
-                echo(original_input, strlen(original_input));
-                continue;
-            }
-            // traverse through paths
+            // ------------- bello >>>>>>>>>>>>>>>>
+
             findCommandInPath(command, paths, path_count);
 
             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Execute ------------------------------------------
             if (*command_found) {
-            
-                // --------------------- cd ---------------------
+
+                // <<<<<<<<<<<<<<<<< cd ---------------------
                 if (strcmp(command, "cd") == 0) {
-                    if (arg_count > 2){
-                        // TODO : error handler
+                    if (arg_count > 2) {
                         fprintf(stderr, "cd: too many arguments\n");
-                    }
-                    else if (arg_count == 2){
+                    } else if (arg_count == 2) {
                         int result = chdir(args[1]);
-                        if (result == -1){
-                            // TODO : error handler
+                        if (result == -1) {
                             fprintf(stderr, "cd: no such file or directory: %s\n", args[1]);
                         }
-                    }
-                    else{
+                    } else {
                         char *home = getenv("HOME");
                         int result = chdir(home);
-                        if (result == -1){
-                            // TODO : error handler
+                        if (result == -1) {
                             fprintf(stderr, "cannot get environment variable HOME\n");
                         }
                     }
+                    // free memory
+                    free(found_path);
                     continue;
                 }
-                // --------------------- cd ---------------------
-                
+                // ---------------- cd >>>>>>>>>>>>>>>>>>>>>>
+
                 execute(found_path, args);
 
-            // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            } else {
+                fprintf(stderr, "%s: command not found\n", command);
             }
         }
-        
+
         // free memory
         free(found_path);
-        free(original_path);
 
-    } while(comparison);
+    } while (comparison);
 
     free(command_found);
 
