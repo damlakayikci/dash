@@ -20,7 +20,7 @@ INCLUDES =
 LIBS =
 
 # Define the source files
-SRCS = dash.c helper.c execute.c
+SRCS = dash.c helper.c execute.c alias.c 
 
 # Define the object files
 OBJS = $(SRCS:.c=.o)
