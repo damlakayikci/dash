@@ -1,11 +1,17 @@
 #include "alias.h"
 #include "execute.h"
 #include "helper.h"
+#include <signal.h> // needed for signal()
 #include <stdio.h>  // needed for printf()
 #include <stdlib.h> // needed for getenv(), PATH
 #include <string.h> // needed for strtok()
 
+void sigintHandler(int sig_num) {
+    signal(SIGINT, sigintHandler);
+    fflush(stdout);
+}
 int main() {
+    signal(SIGINT, sigintHandler);
     // initialize variables
     int path_count;   // number of paths in PATH
     int arg_count;    // number of arguments
