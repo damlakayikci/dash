@@ -1,4 +1,6 @@
 .clang-format
 *.o
 *.out
-myshell
+alias.txt
+helpers/
+
