@@ -1,3 +1,4 @@
+#include "alias.h"
 #include "execute.h"
 #include "helper.h"
 #include <stdio.h>  // needed for printf()
@@ -14,6 +15,8 @@ int main() {
     char *path_token;
     char *command;  // command to be executed
     int comparison; // comparison of exit and command
+    AliasArray alias_array;
+    initArray(&alias_array, 20);
 
     // allocate memory
     command_found = malloc(sizeof(int));
@@ -54,6 +57,12 @@ int main() {
         token = trim(token);
         printf("Trimmed input is %s\n", token);
 
+        // check if input is an alias
+        int alias_index = find_alias(&alias_array, token);
+        if (alias_index != -1) {
+            token = strdup(alias_array.array[alias_index].command);
+        }
+
         // if token length is 0, there is no input. Ignore the rest
         if (strlen(token) == 0) {
             // free memory
@@ -79,7 +88,7 @@ int main() {
             }
             // ------------- echo >>>>>>>>>>>>>>>>
             if (strcmp(command, "alias") == 0) {
-                alias(original_input, strlen(original_input));
+                check_alias(&alias_array, original_input, strlen(original_input));
                 // free memory
                 free(found_path);
                 continue;
@@ -89,6 +98,7 @@ int main() {
                 token = trim(token);
                 if (strlen(token) != 0) {
                     args[arg_count++] = token;
+                    printf("Argument %d is %s\n", arg_count, token);
                 }
                 token = strtok(NULL, " ");
             }
@@ -140,8 +150,9 @@ int main() {
             } else {
                 fprintf(stderr, "%s: command not found\n", command);
             }
+        } else {
+            freeArray(&alias_array);
         }
-
         // free memory
         free(found_path);
 

@@ -46,7 +46,7 @@ void findFilesRecursively(char *baseDirectory, char *file) {
     file = trim(file);
 
     if (!dir) {
-        fprintf(stderr, "Cannot open directory %s\n", baseDirectory);
+        // fprintf(stderr, "Cannot open directory %s\n", baseDirectory);
         return;
     }
 
