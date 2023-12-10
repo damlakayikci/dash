@@ -2,37 +2,46 @@
 #include "helper.h"
 
 void execute(char *path, char **args) {
+    // check if last character is &
+    int background = 0;
+    int i = 0;
+    while (args[i] != NULL) {
+        i++;
+    }
+    if (i > 0 && strcmp(args[i - 1], "&") == 0) {
+        background = 1;     // Last argument is "&"
+        args[i - 1] = NULL; // Remove "&" from args
+    }
     pid_t pid;
     pid = fork();
-    int status;
 
     if (pid < 0) {
-        // TODO : error handler
         perror("Fork Failed: ");
     } else if (pid == 0) {
         execvp(path, args);
         perror("In exec(): ");
     } else {
-        pid = wait(&status);
-        if (WIFEXITED(status)) {
-            printf("The process ended with exit(%d).\n", WEXITSTATUS(status));
-        }
-        if (WIFSIGNALED(status)) {
-            printf("The process ended with kill -%d.\n", WTERMSIG(status));
+        // Parent process
+        if (!background) {
+            int status;
+            waitpid(pid, &status, 0); // Wait for child process to finish
+            if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+                printf("%s: process exited with status %d\n", path, WEXITSTATUS(status));
+            }
         }
     }
 }
 
 void bello() {
-    execute("whoami", (char *[]){"whoami", NULL});
-    execute("hostname", (char *[]){"hostname", NULL});
-    // Last executed command
-    execute("tty", (char *[]){"tty", NULL});
+    execute("whoami", (char *[]){"whoami", NULL});     // 1 username
+    execute("hostname", (char *[]){"hostname", NULL}); // 2 hostname
+    // Last executed Command
+    execute("tty", (char *[]){"tty", NULL}); // 4 tty
     char shell_command[] = "echo $SHELL";
-    echo(shell_command, 12);
-    execute("pwd", (char *[]){"pwd", NULL});
-    execute("date", (char *[]){"date", NULL});
-    // current number of processes being executed
+    echo(shell_command, 12);                   // 5 current shell name
+    execute("pwd", (char *[]){"pwd", NULL});   // 6 current working directory
+    execute("date", (char *[]){"date", NULL}); // 7  date
+    // current number of processes being executed           // 8 current number of processes being executed
 }
 
 char *string_in_reverse(char *input) {

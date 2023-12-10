@@ -10,6 +10,7 @@ void sigintHandler(int sig_num) {
     signal(SIGINT, sigintHandler);
     fflush(stdout);
 }
+
 int main() {
     signal(SIGINT, sigintHandler);
     // initialize variables
