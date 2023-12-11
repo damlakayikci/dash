@@ -155,7 +155,6 @@ int main() {
 
                 execute(found_path, args);
                 previous = strdup(command);
-                printf("previous: %s\n", previous);
                 // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             } else {
                 fprintf(stderr, "%s: command not found\n", command);

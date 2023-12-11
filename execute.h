@@ -7,6 +7,8 @@
 #include <string.h>   // needed for strlen(), strstr()
 #include <sys/wait.h> // needed for wait()
 #include <unistd.h>   // needed for fork(), exec()
+#include <fcntl.h>    // needed for open, O_WRONLY, O_CREAT, O_APPEND, O_TRUNC
+
 
 // Global variables
 extern char *previous;

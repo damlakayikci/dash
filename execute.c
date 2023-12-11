@@ -4,17 +4,80 @@
 char *previous; // previous command
 int current_processes;
 
+void execute_redirect(char *path, char **args, int mode, char *file_name, int background) {
+    int flags;
+    if (mode == 1) {
+        flags = O_WRONLY | O_CREAT | O_TRUNC;
+    } else if (mode == 2) {
+        flags = O_WRONLY | O_CREAT | O_APPEND;
+    } else if (mode == 3) {
+        flags = O_WRONLY | O_CREAT | O_APPEND;
+    }
+    int filedes = open(file_name, flags, 0644);
+    if (filedes < 0) {
+        perror("Error opening file: ");
+        return;
+    }
+    pid_t pid;
+    pid = fork();
+
+    if (pid < 0) {
+        close(filedes);
+        perror("Fork Failed: ");
+    } else if (pid == 0) {
+        dup2(filedes, STDOUT_FILENO);
+        close(filedes);
+        execvp(path, args);
+        perror("In exec(): ");
+        exit(1); // Exit child process if exec fails
+    } else {
+        // Parent process
+        current_processes++; // Increment for the newly created child process
+        if (!background) {
+            close(filedes);
+            int status;
+            waitpid(pid, &status, 0); // Wait for child process to finish
+            current_processes--;      // Decrement as the child process has ended
+            if (WIFEXITED(status) && WEXITSTATUS(status) != 0) { 
+                printf("%s: process exited with status %d\n", path, WEXITSTATUS(status));
+            }
+        }
+    }
+
+}
+
 void execute(char *path, char **args) {
     // check if last character is &
     int background = 0;
+    int redirect_mode = 0;
+    int redirect_index = 0;
     int i = 0;
     while (args[i] != NULL) {
+        if (strcmp(args[i], ">") == 0) {
+            redirect_mode = 1;
+            redirect_index = i;
+        } else if (strcmp(args[i], ">>") == 0){
+            redirect_mode = 2;
+            redirect_index = i;
+        } else if (strcmp(args[i], ">>>") == 0){
+            redirect_mode = 3;
+            redirect_index = i;
+        }
         i++;
     }
+    
     if (i > 0 && strcmp(args[i - 1], "&") == 0) {
         background = 1;     // Last argument is "&"
         args[i - 1] = NULL; // Remove "&" from args
     }
+    if (redirect_mode != 0) {
+        args[redirect_index] = NULL;
+        char *file_name = args[redirect_index + 1];
+        args[redirect_index + 1] = NULL;
+        execute_redirect(path, args, redirect_mode, file_name, background);
+        return;
+    }
+    
     pid_t pid;
     pid = fork();
 
@@ -31,7 +94,7 @@ void execute(char *path, char **args) {
             int status;
             waitpid(pid, &status, 0); // Wait for child process to finish
             current_processes--;      // Decrement as the child process has ended
-            if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            if (WIFEXITED(status) && WEXITSTATUS(status) != 0) { 
                 printf("%s: process exited with status %d\n", path, WEXITSTATUS(status));
             }
         }
