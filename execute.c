@@ -1,6 +1,9 @@
 #include "execute.h"
 #include "helper.h"
 
+char *previous; // previous command
+int current_processes;
+
 void execute(char *path, char **args) {
     // check if last character is &
     int background = 0;
@@ -20,11 +23,14 @@ void execute(char *path, char **args) {
     } else if (pid == 0) {
         execvp(path, args);
         perror("In exec(): ");
+        exit(1); // Exit child process if exec fails
     } else {
         // Parent process
+        current_processes++; // Increment for the newly created child process
         if (!background) {
             int status;
             waitpid(pid, &status, 0); // Wait for child process to finish
+            current_processes--;      // Decrement as the child process has ended
             if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
                 printf("%s: process exited with status %d\n", path, WEXITSTATUS(status));
             }
@@ -33,15 +39,19 @@ void execute(char *path, char **args) {
 }
 
 void bello() {
+    current_processes++;                               // Increment for bello process
     execute("whoami", (char *[]){"whoami", NULL});     // 1 username
     execute("hostname", (char *[]){"hostname", NULL}); // 2 hostname
     // Last executed Command
+    if (previous != NULL) {
+        printf("%s\n", previous); // 3 last executed command
+    }
     execute("tty", (char *[]){"tty", NULL}); // 4 tty
     char shell_command[] = "echo $SHELL";
-    echo(shell_command, 12);                   // 5 current shell name
-    execute("pwd", (char *[]){"pwd", NULL});   // 6 current working directory
-    execute("date", (char *[]){"date", NULL}); // 7  date
-    // current number of processes being executed           // 8 current number of processes being executed
+    echo(shell_command, 12);                                        // 5 current shell name
+    execute("pwd", (char *[]){"pwd", NULL});                        // 6 current working directory
+    execute("date", (char *[]){"date", NULL});                      // 7  date
+    printf("Current number of processes: %d\n", current_processes); // 8 current number of processes being executed
 }
 
 char *string_in_reverse(char *input) {
@@ -139,8 +149,8 @@ void echo(char *input, int length) {
                 if (token[0] == '$') {
                     strncpy(env, token + 1, strlen(token) - 1);
                     env[strlen(token) - 1] = '\0';
-                    env = getenv(env);
-                    args[arg_count++] = env;
+                    char *env_value = getenv(env);
+                    args[arg_count++] = env_value;
                 } else {
                     args[arg_count++] = token;
                 }

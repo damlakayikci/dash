@@ -21,6 +21,8 @@ int main() {
     char *path;       // PATH variable to be parsed
     char *path_token;
     char *command;  // command to be executed
+    char *previous; // previous command
+    int current_processes;
     int comparison; // comparison of exit and command
     AliasArray alias_array;
     initArray(&alias_array, 20);
@@ -152,7 +154,8 @@ int main() {
                 // ---------------- cd >>>>>>>>>>>>>>>>>>>>>>
 
                 execute(found_path, args);
-
+                previous = strdup(command);
+                printf("previous: %s\n", previous);
                 // ------------------------------------------ Execute >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             } else {
                 fprintf(stderr, "%s: command not found\n", command);

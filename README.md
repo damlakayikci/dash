@@ -6,6 +6,7 @@ This is a custom shell project for Operating Systems course @Bogazici University
 
 Simply run
 
-`make`
-
-`./myshell`
+```
+make
+./mysell
+```

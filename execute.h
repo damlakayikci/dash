@@ -8,6 +8,10 @@
 #include <sys/wait.h> // needed for wait()
 #include <unistd.h>   // needed for fork(), exec()
 
+// Global variables
+extern char *previous;
+extern int current_processes;
+
 void execute(char *path, char **args);
 
 void bello();
