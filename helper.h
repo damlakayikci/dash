@@ -12,6 +12,7 @@
 #include <dirent.h>   // opendir, readdir, closedir. DIR
 #include <pwd.h>      // needed for getpwuid()
 #include <stdio.h>    // needed for printf()
+#include <stdlib.h>   // needed for malloc(), free()
 #include <string.h>   // needed for strlen(), strtok()
 #include <sys/stat.h> // stat, struct stat
 #include <unistd.h>   // needed for fork(), exec()
@@ -48,3 +49,5 @@ char *trim(char *s);
 */
 
 #endif
+
+char *trimm(char *s);

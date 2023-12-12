@@ -10,3 +10,9 @@ Simply run
 make
 ./mysell
 ```
+
+### Important Notes
+
+- You cannot exit program using ^C
+- Variables ($) should not be in quotes
+- Item 3

@@ -91,3 +91,9 @@ char *rtrim(char *s) {
 char *trim(char *s) {
     return rtrim(ltrim(s));
 }
+
+char *trimm(char *s) {
+    s = ltrim(s);     // Move the pointer to the first non-whitespace character
+    rtrim(s);         // Trim the string in place
+    return strdup(s); // Create a new allocation for the trimmed string
+}
