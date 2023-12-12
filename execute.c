@@ -4,13 +4,20 @@
 int current_processes;
 
 void execute_redirect(char *path, char **args, int mode, char *file_name, int background) {
-    int flags;
+    int flags, p[2], nbytes;
+    char inbuf[1023]; // initialize to max string size of 1023
+
+    if (pipe(p) < 0) {
+        perror("pipe"); // if pipe fails
+        return;
+    }
+
     if (mode == 1) {
-        flags = O_WRONLY | O_CREAT | O_TRUNC;
+        flags = O_WRONLY | O_CREAT | O_TRUNC; // w mode
     } else if (mode == 2) {
-        flags = O_WRONLY | O_CREAT | O_APPEND;
+        flags = O_WRONLY | O_CREAT | O_APPEND; // a mode
     } else if (mode == 3) {
-        flags = O_WRONLY | O_CREAT | O_APPEND;
+        flags = O_WRONLY | O_CREAT | O_APPEND; // a mode
     }
 
     int filedes = open(file_name, flags, 0644);
@@ -18,26 +25,58 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
         perror("Error opening file: ");
         return;
     }
-    pid_t pid;
+    pid_t pid, g_pid; // g_pid is the pid of the grandchild process
     pid = fork();
 
     if (pid < 0) {
         close(filedes);
         perror("Fork Failed: ");
-    } else if (pid == 0) {
-        dup2(filedes, STDOUT_FILENO); // Redirect stdout to the file
-        close(filedes);
-        execvp(path, args);
-        perror("In exec(): ");
-        exit(1); // Exit child process if exec fails
+    } else if (pid == 0) { // Child process
+        g_pid = fork();
+
+        if (g_pid < 0) {
+            perror("forking grandchild");
+            exit(1);
+        } else if (g_pid == 0) { // Grandchild process
+            // Redirect stdout to the write end of the pipe
+            dup2(p[1], STDOUT_FILENO);
+            close(p[0]); // Close the read end of the pipe in the grandchild
+            close(p[1]); // Close the write end of the pipe
+
+            // Execute the command
+            execvp(path, args);
+            perror("execvp");
+            exit(1);
+
+        } else {         // Child process
+            close(p[1]); // Close the write end of the pipe in the child
+
+            // Wait for the grandchild to finish
+            wait(NULL);
+
+            // Read from the pipe and write to the file
+            nbytes = read(p[0], inbuf, 1023);
+            if (nbytes > 0) {         // nbytes is going to give us the number of bytes read
+                inbuf[nbytes] = '\0'; // Null-terminate the string
+            }
+            close(p[0]); // Close the read end of the pipe in the parent
+            char *out = trim(inbuf);
+            printf("out is %s\n", out);
+
+            if (mode == 3) {
+                write(filedes, string_in_reverse(inbuf), nbytes - 1);
+            } else {
+                write(filedes, inbuf, nbytes - 1);
+            }
+
+            close(filedes);
+        }
+
     } else {
         // Parent process
-        current_processes++; // Increment for the newly created child process
         if (!background) {
-            close(filedes);
             int status;
             waitpid(pid, &status, 0); // Wait for child process to finish
-            current_processes--;      // Decrement as the child process has ended
             if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
                 printf("%s: process exited with status %d\n", path, WEXITSTATUS(status));
             }
@@ -52,7 +91,6 @@ void execute(char *path, char **args) {
     int redirect_index = 0;
     int i = 0;
     while (args[i] != NULL) {
-        printf("args[%d]: %s\n", i, args[i]); // TODO : remove this
         if (strcmp(args[i], ">") == 0) {
             redirect_mode = 1;
             redirect_index = i;

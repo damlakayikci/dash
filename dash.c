@@ -60,7 +60,7 @@ int main() {
         fgets(input, sizeof(input), stdin);
 
         // trim input
-        char *original_input = strdup(input); // save original input for echo
+        char *original_input = trim(strdup(input)); // save original input for echo
         printf("Length of input is %lu\n", strlen(input));
         char *token = input;
         token = trim(token);
@@ -173,18 +173,15 @@ int main() {
             } else {
                 fprintf(stderr, "%s: command not found\n", command);
             }
-            // Print every element of alias array
-            printf("================Printing alias array============\n");
-            for (int i = 0; i < alias_array.used; i++) {
-                printf("alias name: %s\n", alias_array.array[i].shortcut);
-                printf("alias command: %s\n", alias_array.array[i].command);
-            }
 
         } else {
             freeArray(&alias_array);
         }
         // free memory
         free(found_path);
+        while (waitpid(-1, NULL, WNOHANG) > 0) {
+            // A periodic check on zombie processes
+        }
 
     } while (comparison);
 
