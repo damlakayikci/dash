@@ -29,10 +29,6 @@ void findCommandInPath(char *command, char *paths[], int path_count) {
     for (int i = 0; i < path_count; i++) {
         findFilesRecursively(paths[i], command);
         if (*command_found) {
-            // TODO : remove this
-            printf("Command found in %s\n", paths[i]);
-            printf("Command is %s\n", found_path);
-            // TODO : remove this
             break;
         }
     }
@@ -90,10 +86,4 @@ char *rtrim(char *s) {
 
 char *trim(char *s) {
     return rtrim(ltrim(s));
-}
-
-char *trimm(char *s) {
-    s = ltrim(s);     // Move the pointer to the first non-whitespace character
-    rtrim(s);         // Trim the string in place
-    return strdup(s); // Create a new allocation for the trimmed string
 }

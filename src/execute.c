@@ -4,7 +4,6 @@
 int current_processes;
 
 void zombie_handler(int sig) {
-    printf("Signal %d received\n", sig);
     current_processes--;
 }
 
@@ -31,7 +30,7 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
             perror("forking grandchild");
             exit(1);
         } else if (g_pid == 0) { //  --------------------------------------------- Grandchild process
-            current_processes++; // Increment for the newly created grandchild process
+
             // Redirect stdout to the write end of the pipe
             dup2(p[1], STDOUT_FILENO);
             close(p[0]); // Close the read end of the pipe in the grandchild
@@ -43,7 +42,7 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
             exit(1);
 
         } else {                 //   --------------------------------------------- Child process
-            current_processes++; // Increment for the newly created child process
+            current_processes++; // Increment for the newly created grandchild process
             close(p[1]);         // Close the write end of the pipe in the child
 
             // Wait for the grandchild to finish
@@ -87,6 +86,8 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
         }
 
     } else { // ------------------------------------------------------------- Parent process
+
+        current_processes++; // Increment for the newly created child process
         if (!background) {
             int status;
             waitpid(pid, &status, 0); // Wait for child process to finish
@@ -239,9 +240,6 @@ void echo(char *input, int length) {
             }
             token = strtok(NULL, " ");
         }
-        for (int i = 0; i < arg_count; i++) {
-            printf("args[%d]: %s\n", i, args[i]);
-        }
         args[arg_count] = NULL;
         execute("echo", args);
 
@@ -255,71 +253,33 @@ void echo(char *input, int length) {
     int check_index;
     char *write_this = malloc(length - 5);
     char *args[6];
+    int redirect = 0;
     args[0] = "echo";
+
     // triple redirect
     check = strstr(input, ">>>");
     check_index = check - input;
-    if ((check_index < length - 3) && (check_index > 0)) {
-        strncpy(write_this, input + 5, check_index - 6);
-        char *file = malloc(length - check_index - 5);
-        strncpy(file, input + check_index + 3, length);
-        char *file_name = trim(file);
-        // if last char is &, remove it
-        if (file_name[strlen(file_name) - 1] == '&' && file_name[strlen(file_name) - 2] == ' ') {
-            file_name[strlen(file_name) - 2] = '\0';
-            args[4] = "&";
-            args[5] = NULL;
-        } else {
-            args[4] = NULL;
-        }
-        args[1] = write_this;
-        args[2] = ">>>";
-        args[3] = file_name;
-        execute("echo", args);
-        // free memory
-        free(write_this);
-        free(file);
-        return;
+    if ((check_index < length - 3) && (check_index > 5)) {
+        redirect++;
     }
-
     // double redirect
     check = strstr(input, ">>");
     check_index = check - input;
-    if ((check_index < length - 2) && (check_index > 0)) {
-        strncpy(write_this, input + 5, check_index - 6);
-        char *file = malloc(length - check_index - 5);
-        strncpy(file, input + check_index + 2, length);
-        char *file_name = trim(file);
-        // if last char is &, remove it
-        if (file_name[strlen(file_name) - 1] == '&' && file_name[strlen(file_name) - 2] == ' ') {
-            file_name[strlen(file_name) - 2] = '\0';
-            args[4] = "&";
-            args[5] = NULL;
-        } else {
-            args[4] = NULL;
-        }
-        args[1] = write_this;
-        args[2] = ">>";
-        args[3] = file_name;
-        args[4] = NULL;
-        execute("echo", args);
-        // free memory
-        free(write_this);
-        free(file);
-        return;
+    if ((check_index < length - 2) && (check_index > 5)) {
+        redirect++;
     }
-
     // single redirect
     check = strstr(input, ">");
     check_index = check - input;
-    if ((check_index < length - 1) && (check_index > 0)) {
+    if ((check_index < length - 1) && (check_index > 5)) {
+        redirect++;
+    }
+
+    if (redirect > 0) {
         strncpy(write_this, input + 5, check_index - 6);
-        printf("write_this: %s\n", write_this);
         char *file = malloc(length - check_index - 5);
-        strncpy(file, input + check_index + 1, length);
-        printf("file: %s\n", file);
+        strncpy(file, input + check_index + redirect, length);
         char *file_name = trim(file);
-        printf("file_name: %s\n", file_name);
         // if last char is &, remove it
         if (file_name[strlen(file_name) - 1] == '&' && file_name[strlen(file_name) - 2] == ' ') {
             file_name[strlen(file_name) - 2] = '\0';
@@ -328,8 +288,21 @@ void echo(char *input, int length) {
         } else {
             args[4] = NULL;
         }
+        // if file name is alias.txt return error
+        if (strcmp(file_name, "alias.txt") == 0) {
+            fprintf(stderr, "echo: cannot write to alias.txt\n");
+            free(write_this);
+            free(file);
+            return;
+        }
         args[1] = write_this;
-        args[2] = ">";
+        if (redirect == 1) {
+            args[2] = ">";
+        } else if (redirect == 2) {
+            args[2] = ">>";
+        } else if (redirect == 3) {
+            args[2] = ">>>";
+        }
         args[3] = file_name;
         args[4] = NULL;
         execute("echo", args);
@@ -339,16 +312,20 @@ void echo(char *input, int length) {
         return;
     }
 
+    if (length < 6) {
+        args[1] = "\n";
+        args[2] = NULL;
+        execute("echo", args);
+        free(write_this);
+        return;
+    }
     strncpy(write_this, input + 5, length);
-    printf("write_this: %s\n", write_this);
-    // null terminate
-    write_this[length - 5] = '\0';
+    write_this[length - 5] = '\0'; // null terminate
     args[1] = write_this;
     args[2] = NULL;
 
     execute("echo", args);
 
     // free memory
-
     free(write_this);
 }

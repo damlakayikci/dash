@@ -61,10 +61,8 @@ int main() {
 
         // trim input
         char *original_input = trim(strdup(input)); // save original input for echo
-        printf("Length of input is %lu\n", strlen(input));
         char *token = input;
         token = trim(token);
-        printf("Trimmed input is %s\n", token);
 
         // check if input is an alias
         int alias_index = find_alias(&alias_array, token);
@@ -90,7 +88,6 @@ int main() {
         if (strcmp(command, "exit")) {
             // <<<<<<<<<<<<< echo ----------------
             if (strcmp(command, "echo") == 0) {
-                printf("Original input is %s\n", original_input);
                 echo(original_input, strlen(original_input));
                 // free memory
                 free(found_path);
@@ -110,7 +107,6 @@ int main() {
                 token = trim(token);
                 if (strlen(token) != 0) {
                     args[arg_count++] = token;
-                    printf("Argument %d is %s\n", arg_count, token);
                 }
                 token = strtok(NULL, " ");
             }
@@ -125,11 +121,8 @@ int main() {
             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Execute ------------------------------------------
             // <<<<<<<<<<<<< bello ----------------
             if (previous == NULL) {
-                printf("previous is null\n");
                 previous = malloc(1);
                 previous[0] = '\0';
-            } else {
-                printf("previous is %s\n", previous);
             }
             if (strcmp(command, "bello") == 0) {
                 if (!bello(args, previous, arg_count)) {
