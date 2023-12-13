@@ -14,7 +14,7 @@ CFLAGS = -Wall -g
 # such as variable values, function call stacks, and more.
 
 # Define any directories containing header files
-INCLUDES = 
+INCLUDES = -Iheaders
 
 # Define any libraries to link into executable
 LIBS =
