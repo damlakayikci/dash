@@ -18,9 +18,9 @@ typedef struct {
     size_t size;
 } AliasArray;
 
-int find_alias(AliasArray *a, const char *shortcut);
+int find_alias(AliasArray *a, char *shortcut);
 
-void insertArray(AliasArray *a, const char *shortcut, const char *command);
+void insertArray(AliasArray *a, char *shortcut, char *command);
 
 void initArray(AliasArray *a, size_t initialSize);
 

@@ -3,13 +3,12 @@
 // TODO : alias command for more than 1 words
 // alias asjdna = "  cd ,, |"
 // alias asjdna = " echo "asdmkas" "
-int find_alias(AliasArray *a, const char *shortcut) {
+int find_alias(AliasArray *a, char *shortcut) {
     if (a->used == 0) {
         return -1;
     }
 
     for (size_t i = 0; i < a->used; i++) {
-        printf("Shortcut: command => %s: %s\n", a->array[i].shortcut, a->array[i].command);
         if (strcmp(a->array[i].shortcut, shortcut) == 0) {
             return i;
         }
@@ -17,7 +16,7 @@ int find_alias(AliasArray *a, const char *shortcut) {
     return -1;
 }
 
-void insertArray(AliasArray *a, const char *shortcut, const char *command) {
+void insertArray(AliasArray *a, char *shortcut, char *command) {
     if (a->used == a->size) {
         a->size *= 2;
         a->array = realloc(a->array, a->size * sizeof(Alias));
@@ -25,7 +24,6 @@ void insertArray(AliasArray *a, const char *shortcut, const char *command) {
     // Check if shortcut already exists
     int index = find_alias(a, shortcut);
     if (index != -1) {
-        printf("shortcut already exists\n");
         free(a->array[index].command);
         a->array[index].command = strdup(command);
         return;
@@ -49,17 +47,14 @@ void initArray(AliasArray *a, size_t initialSize) {
     if (file_pointer == NULL) {
         return;
     }
-    printf("File exists\n");
 
     // Read each line and insert it into the array
     while (fgets(line, sizeof(line), file_pointer)) {
         if (line[0] == '\n') {
             continue;
         }
-        printf("Line: %s", line);
         char *shortcut = strtok(line, "=");
         char *command = strtok(NULL, "=");
-        printf("%s: %s\n", shortcut, command);
 
         insertArray(a, shortcut, command);
     }
@@ -77,13 +72,11 @@ void freeArray(AliasArray *a) {
         fprintf(stderr, "Error saving alias\n");
     }
     for (size_t i = 0; i < a->used; i++) {
-        printf("Write back to file %s: %s\n", a->array[i].shortcut, a->array[i].command);
         fprintf(file_pointer, "%s=%s\n", a->array[i].shortcut, a->array[i].command);
         free(a->array[i].shortcut);
-        printf("freeing %s\n", a->array[i].command);
         free(a->array[i].command);
     }
-    printf("File saved\n");
+
     fclose(file_pointer);
     free(a->array);
     a->array = NULL;
@@ -99,9 +92,7 @@ void check_alias(AliasArray *a, char *input, int length) {
     int arg_count = 0;
 
     while (token != NULL) {
-        printf("token: %s\n", token);
         token = trim(token);
-        printf("token: %s\n", token);
         if (arg_count > 1) {
             fprintf(stderr, "alias: too many arguments\n");
             free(alias_name);
@@ -125,7 +116,6 @@ void check_alias(AliasArray *a, char *input, int length) {
                 char *trimmed = trim(alias_command);
                 strncpy(alias_command, trimmed, strlen(trimmed));
                 alias_command[strlen(trimmed)] = '\0';
-                printf("alias_command: %s\n", alias_command);
                 // if the command doesnt start and end with quotes, it is invalid
                 if (((alias_command[0] != '"') && (alias_command[0] != '\'')) || ((alias_command[strlen(alias_command) - 1] != '"') && (alias_command[strlen(alias_command) - 1] != '\''))) {
                     fprintf(stderr, "alias: invalid command format\n");
@@ -142,8 +132,6 @@ void check_alias(AliasArray *a, char *input, int length) {
         token = strtok(NULL, "=");
     }
 
-    printf("alias_name: %s\n", alias_name);
-    printf("alias_command: %s\n", alias_command);
     insertArray(a, alias_name, alias_command);
 
     // free memory

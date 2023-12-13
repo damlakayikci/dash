@@ -61,15 +61,15 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
             }
             close(p[0]); // Close the read end of the pipe in the parent
             char *out = trim(inbuf);
-            printf("out is %s\n", out);
 
             if (mode == 3) {
-                write(filedes, string_in_reverse(inbuf), nbytes - 1);
+                write(filedes, string_in_reverse(out), nbytes - 1);
             } else {
-                write(filedes, inbuf, nbytes - 1);
+                write(filedes, out, nbytes - 1);
             }
 
             close(filedes);
+            exit(0);
         }
 
     } else {
@@ -262,7 +262,7 @@ void echo(char *input, int length) {
     // triple redirect
     check = strstr(input, ">>>");
     check_index = check - input;
-    if ((check_index < length) && (check_index > 0)) {
+    if ((check_index < length - 3) && (check_index > 0)) {
         strncpy(write_this, input + 5, check_index - 6);
         char *file = malloc(length - check_index - 5);
         strncpy(file, input + check_index + 3, length);
@@ -288,7 +288,7 @@ void echo(char *input, int length) {
     // double redirect
     check = strstr(input, ">>");
     check_index = check - input;
-    if ((check_index < length) && (check_index > 0)) {
+    if ((check_index < length - 2) && (check_index > 0)) {
         strncpy(write_this, input + 5, check_index - 6);
         char *file = malloc(length - check_index - 5);
         strncpy(file, input + check_index + 2, length);
@@ -315,7 +315,7 @@ void echo(char *input, int length) {
     // single redirect
     check = strstr(input, ">");
     check_index = check - input;
-    if ((check_index < length) && (check_index > 0)) {
+    if ((check_index < length - 1) && (check_index > 0)) {
         strncpy(write_this, input + 5, check_index - 6);
         printf("write_this: %s\n", write_this);
         char *file = malloc(length - check_index - 5);

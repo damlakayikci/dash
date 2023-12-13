@@ -23,7 +23,6 @@ int main() {
     char *command;       // command to be executed
     char *previous = ""; // previous command
     int current_processes;
-    int comparison; // comparison of exit and command
     AliasArray alias_array;
     initArray(&alias_array, 20);
 
@@ -31,6 +30,7 @@ int main() {
     command_found = malloc(sizeof(int));
 
     do {
+
         // initialize variables
         *command_found = 0;
         found_path = (char *)malloc(1024 * sizeof(char));
@@ -69,10 +69,8 @@ int main() {
         // check if input is an alias
         int alias_index = find_alias(&alias_array, token);
         if (alias_index != -1) {
-            printf("Length of alias is %lu\n", strlen(alias_array.array[alias_index].command));
             token = strdup(alias_array.array[alias_index].command);
             original_input = strdup(token);
-            printf("alias found: %s\n", token);
         }
 
         // if token length is 0, there is no input. Ignore the rest
@@ -87,11 +85,9 @@ int main() {
 
         // get the first token as command and check if it is exit
         command = trim(token);
-        printf("Command is %s\n", command);
-        comparison = strcmp(command, "exit");
 
         // if command is not exit
-        if (comparison) {
+        if (strcmp(command, "exit")) {
             // <<<<<<<<<<<<< echo ----------------
             if (strcmp(command, "echo") == 0) {
                 printf("Original input is %s\n", original_input);
@@ -179,11 +175,11 @@ int main() {
         }
         // free memory
         free(found_path);
-        while (waitpid(-1, NULL, WNOHANG) > 0) {
-            // A periodic check on zombie processes
-        }
+        // while (waitpid(-1, NULL, WNOHANG) > 0) {
+        //     // A periodic check on zombie processes
+        // }
 
-    } while (comparison);
+    } while (strcmp(command, "exit"));
 
     free(command_found);
 
