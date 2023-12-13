@@ -139,38 +139,15 @@ void execute(char *path, char **args) {
     }
 }
 
-int bello(char **args, char *previous) {
-    current_processes++; // Increment for bello process
-    FILE *file_pointer;
-    char *mode;
-    int reversed = 0;
-    int is_stdout = 0;
-    if (args[1] == NULL) {
-        file_pointer = stdout;
-        is_stdout = 1;
-    } else {
-        if (args[2] == NULL) {
-            perror("Error: no file name specified");
-            return 1;
-        }
-        if (strcmp(args[1], ">") == 0) {
-            mode = "w\0";
-        } else if (strcmp(args[1], ">>") == 0) {
-            mode = "a\0";
-        } else if (strcmp(args[1], ">>>") == 0) {
-            mode = "a\0";
-            reversed = 1;
-        } else {
-            perror("Error: invalid mode");
-            return 1;
-        }
-        file_pointer = fopen(args[2], mode);
-    }
-
-    if (file_pointer == NULL) {
-        perror("Error opening file: ");
+int bello(char **args, char *previous, int arg_count) {
+    if (arg_count > 4) {
+        fprintf(stderr, "bello: too many arguments\n");
         return 1;
     }
+    current_processes++; // Increment for bello process
+    int char_count = 0;  // Number of characters written to buffer
+    char buffer[1024];
+
     char cwd[1024];
     getcwd(cwd, sizeof(cwd));
     char hostname[1024];
@@ -182,23 +159,35 @@ int bello(char **args, char *previous) {
     // Time
     time_t now;
     struct tm *tm_info;
-    char buffer[80];
-    time(&now);                                            // Get current time
-    tm_info = localtime(&now);                             // Convert to local time format
-    strftime(buffer, 80, "%a %b %d %H:%M:%S %Y", tm_info); // Format time, "Day Month Date HH:MM:SS YYYY"
+    char time_buffer[80];
+    time(&now);                                                 // Get current time
+    tm_info = localtime(&now);                                  // Convert to local time format
+    strftime(time_buffer, 80, "%a %b %d %H:%M:%S %Y", tm_info); // Format time, "Day Month Date HH:MM:SS YYYY"
 
     // Print to file
-    fprintf(file_pointer, "%s\n", reversed ? string_in_reverse(pw->pw_name) : pw->pw_name);
-    fprintf(file_pointer, "%s\n", reversed ? string_in_reverse(hostname) : hostname);
-    fprintf(file_pointer, "%s\n", reversed ? string_in_reverse(previous) : previous);
-    fprintf(file_pointer, "%s\n", reversed ? string_in_reverse(tty_name) : tty_name);
-    fprintf(file_pointer, "%s\n", reversed ? string_in_reverse(shell) : shell);
-    fprintf(file_pointer, "%s\n", reversed ? string_in_reverse(cwd) : cwd);
-    fprintf(file_pointer, "%s\n", reversed ? string_in_reverse(buffer) : buffer);
-    fprintf(file_pointer, "%d\n", current_processes);
-    if (!is_stdout) {
-        fclose(file_pointer); // Close file
+    char_count = sprintf(buffer, "%s\n", pw->pw_name);
+    char_count += sprintf(buffer + char_count, "%s\n", hostname);
+    char_count += sprintf(buffer + char_count, "%s\n", previous);
+    char_count += sprintf(buffer + char_count, "%s\n", tty_name);
+    char_count += sprintf(buffer + char_count, "%s\n", shell);
+    char_count += sprintf(buffer + char_count, "%s\n", cwd);
+    char_count += sprintf(buffer + char_count, "%s\n", time_buffer);
+    char_count += sprintf(buffer + char_count, "%d\n", current_processes);
+    buffer[char_count] = '\0';
+
+    // Shift elements of args to the right
+    for (int i = arg_count; i > 0; i--) {
+        args[i] = args[i - 1];
     }
+    args[0] = "echo";
+    args[1] = buffer;
+
+    // print elements of args
+    for (int i = 0; i < arg_count + 1; i++) {
+        printf("args[%d]: %s\n", i, args[i]);
+    }
+
+    execute("echo", args);
     current_processes--; // Decrement as the bello process has ended
     return 0;
 }

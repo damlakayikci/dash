@@ -15,7 +15,7 @@ extern int current_processes;
 
 void execute(char *path, char **args);
 
-int bello(char **args, char *previous);
+int bello(char **args, char *previous, int arg_count);
 
 void echo(char *input, int length);
 

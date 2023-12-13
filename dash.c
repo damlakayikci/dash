@@ -132,9 +132,12 @@ int main() {
                 printf("previous is %s\n", previous);
             }
             if (strcmp(command, "bello") == 0) {
-                if (!bello(args, previous)) {
+                if (!bello(args, previous, arg_count)) {
                     previous = strdup("bello");
                 }
+                // free memory
+                free(found_path);
+                continue;
 
             }
             // ------------- bello >>>>>>>>>>>>>>>>
