@@ -1,6 +1,6 @@
 # Dash The Damla Shell
 
-This is a custom shell project for Operating Systems course @Bogazici University.
+This is a custom shell project for Operating Systems course @Bogazici University. A detailed description can be found [under](/description/)
 
 ## How to use it?
 
