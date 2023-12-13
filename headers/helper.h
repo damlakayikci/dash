@@ -29,14 +29,14 @@ void print_command_prompt();
 */
 
 void findFilesRecursively(char *baseDirectory, char *file);
-/*
+/**
     Finds the given file in the given directory and its subdirectories recursively.
     @param baseDirectory: The directory to start searching from.
     @param file: The file to search for.
 */
 
 void findCommandInPath(char *command, char *paths[], int path_count);
-/*
+/**
     Using findFilesRecursively(), searches for the given command in the given paths.
     @param command: The command to search for.
     @param paths: The list of paths to search in.
@@ -44,10 +44,8 @@ void findCommandInPath(char *command, char *paths[], int path_count);
 */
 
 char *trim(char *s);
-/*
+/**
     Trims the leading and trailing whitespaces from the given string.
 */
 
 #endif
-
-char *trimm(char *s);
