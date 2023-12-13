@@ -20,7 +20,7 @@ INCLUDES = -Iheaders
 LIBS =
 
 # Define the source files
-SRCS = dash.c helper.c execute.c alias.c 
+SRCS = src/dash.c src/helper.c src/execute.c src/alias.c
 
 # Define the object files
 OBJS = $(SRCS:.c=.o)
@@ -35,13 +35,14 @@ all:    $(MAIN)
 
 $(MAIN): $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LIBS)
+	rm -f $(OBJS)
 
 # This is a suffix replacement rule for building .o's from .c's
 .c.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 
 clean:
-	$(RM) *.o *~ $(MAIN)
+	$(RM) src/*.o *~ $(MAIN) 
 
 depend: $(SRCS)
 	makedepend $(INCLUDES) $^
