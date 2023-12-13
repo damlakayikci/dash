@@ -10,8 +10,9 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
     if (pid < 0) {
         perror("Fork Failed: ");
     } else if (pid == 0) { //  --------------------------------------------- Child process
-        int flags, p[2], nbytes;
+        int flags, p[2];
         char inbuf[1023]; // initialize to max string size of 1023
+        ssize_t numRead;
 
         if (pipe(p) < 0) {
             perror("pipe"); // if pipe fails
@@ -60,20 +61,19 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
                 exit(1);
             }
 
-            // Read from the pipe and write to the file
-            nbytes = read(p[0], inbuf, 1023);
-            if (nbytes > 0) {         // nbytes is going to give us the number of bytes read
-                inbuf[nbytes] = '\0'; // Null-terminate the string
-            }
-            close(p[0]); // Close the read end of the pipe in the parent
-            char *out = trim(inbuf);
-
-            if (mode == 3) {
-                write(filedes, string_in_reverse(out), nbytes - 1);
-            } else {
-                write(filedes, out, nbytes - 1);
+            // read from the pipe and write to the file
+            while ((numRead = read(p[0], inbuf, 1023)) > 0) {
+                inbuf[numRead] = '\0'; // Null-terminate the string
+                if (mode == 3) {
+                    char *reversed = string_in_reverse(inbuf);
+                    write(filedes, reversed, numRead);
+                    free(reversed);
+                } else {
+                    write(filedes, inbuf, numRead);
+                }
             }
 
+            close(p[0]); // Close the read end of the pipe in the child
             close(filedes);
             exit(0);
         }
@@ -186,11 +186,6 @@ int bello(char **args, char *previous, int arg_count) {
     }
     args[0] = "echo";
     args[1] = buffer;
-
-    // print elements of args
-    for (int i = 0; i < arg_count + 1; i++) {
-        printf("args[%d]: %s\n", i, args[i]);
-    }
 
     execute("echo", args);
     current_processes--; // Decrement as the bello process has ended
