@@ -3,8 +3,14 @@
 
 int current_processes;
 
+void zombie_handler(int sig) {
+    printf("Signal %d received\n", sig);
+    current_processes--;
+}
+
 void execute_redirect(char *path, char **args, int mode, char *file_name, int background) {
-    pid_t pid, g_pid; // g_pid is the pid of the grandchild process
+    pid_t pid, g_pid;                // g_pid is the pid of the grandchild process
+    signal(SIGCHLD, zombie_handler); // Catches the signal sent by the child process when it exits
     pid = fork();
 
     if (pid < 0) {
@@ -25,6 +31,7 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
             perror("forking grandchild");
             exit(1);
         } else if (g_pid == 0) { //  --------------------------------------------- Grandchild process
+            current_processes++; // Increment for the newly created grandchild process
             // Redirect stdout to the write end of the pipe
             dup2(p[1], STDOUT_FILENO);
             close(p[0]); // Close the read end of the pipe in the grandchild
@@ -35,8 +42,9 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
             perror("execvp");
             exit(1);
 
-        } else {         //   --------------------------------------------- Child process
-            close(p[1]); // Close the write end of the pipe in the child
+        } else {                 //   --------------------------------------------- Child process
+            current_processes++; // Increment for the newly created child process
+            close(p[1]);         // Close the write end of the pipe in the child
 
             // Wait for the grandchild to finish
             int status;
@@ -122,6 +130,7 @@ void execute(char *path, char **args) {
     }
 
     pid_t pid;
+    signal(SIGCHLD, zombie_handler); // Catches the signal sent by the child process when it exits
     pid = fork();
 
     if (pid < 0) {
@@ -136,7 +145,6 @@ void execute(char *path, char **args) {
         if (!background) {
             int status;
             waitpid(pid, &status, 0); // Wait for child process to finish
-            current_processes--;      // Decrement as the child process has ended
             if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
                 printf("%s: process exited with status %d\n", path, WEXITSTATUS(status));
             }
