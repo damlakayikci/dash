@@ -1,8 +1,5 @@
-#include "alias.h"
+#include "headers/alias.h"
 
-// TODO : alias command for more than 1 words
-// alias asjdna = "  cd ,, |"
-// alias asjdna = " echo "asdmkas" "
 int find_alias(AliasArray *a, char *shortcut) {
     if (a->used == 0) {
         return -1;

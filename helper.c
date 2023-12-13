@@ -1,4 +1,4 @@
-#include "helper.h"
+#include "headers/helper.h"
 
 int *command_found;
 char *found_path;

@@ -1,6 +1,6 @@
-#include "alias.h"
-#include "execute.h"
-#include "helper.h"
+#include "headers/alias.h"
+#include "headers/execute.h"
+#include "headers/helper.h"
 #include <signal.h> // needed for signal()
 #include <stdio.h>  // needed for printf()
 #include <stdlib.h> // needed for getenv(), PATH

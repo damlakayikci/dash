@@ -1,43 +1,30 @@
-#include "execute.h"
-#include "helper.h"
+#include "headers/execute.h"
+#include "headers/helper.h"
 
 int current_processes;
 
 void execute_redirect(char *path, char **args, int mode, char *file_name, int background) {
-    int flags, p[2], nbytes;
-    char inbuf[1023]; // initialize to max string size of 1023
 
-    if (pipe(p) < 0) {
-        perror("pipe"); // if pipe fails
-        return;
-    }
-
-    if (mode == 1) {
-        flags = O_WRONLY | O_CREAT | O_TRUNC; // w mode
-    } else if (mode == 2) {
-        flags = O_WRONLY | O_CREAT | O_APPEND; // a mode
-    } else if (mode == 3) {
-        flags = O_WRONLY | O_CREAT | O_APPEND; // a mode
-    }
-
-    int filedes = open(file_name, flags, 0644);
-    if (filedes < 0) {
-        perror("Error opening file: ");
-        return;
-    }
     pid_t pid, g_pid; // g_pid is the pid of the grandchild process
     pid = fork();
 
     if (pid < 0) {
-        close(filedes);
         perror("Fork Failed: ");
-    } else if (pid == 0) { // Child process
+    } else if (pid == 0) { //  --------------------------------------------- Child process
+        int flags, p[2], nbytes;
+        char inbuf[1023]; // initialize to max string size of 1023
+
+        if (pipe(p) < 0) {
+            perror("pipe"); // if pipe fails
+            exit(1);
+        }
+
         g_pid = fork();
 
         if (g_pid < 0) {
             perror("forking grandchild");
             exit(1);
-        } else if (g_pid == 0) { // Grandchild process
+        } else if (g_pid == 0) { //  --------------------------------------------- Grandchild process
             // Redirect stdout to the write end of the pipe
             dup2(p[1], STDOUT_FILENO);
             close(p[0]); // Close the read end of the pipe in the grandchild
@@ -48,11 +35,31 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
             perror("execvp");
             exit(1);
 
-        } else {         // Child process
+        } else {         //   --------------------------------------------- Child process
             close(p[1]); // Close the write end of the pipe in the child
 
             // Wait for the grandchild to finish
-            wait(NULL);
+            int status;
+            waitpid(g_pid, &status, 0); // Wait for the grandchild process to finish
+
+            if (WIFEXITED(status) && WEXITSTATUS(status) != 0) { // If grandchild process exits with non-zero status
+                exit(1);
+            }
+
+            // Open the file based on the mode
+            if (mode == 1) {
+                flags = O_WRONLY | O_CREAT | O_TRUNC; // w mode
+            } else if (mode == 2) {
+                flags = O_WRONLY | O_CREAT | O_APPEND; // a mode
+            } else if (mode == 3) {
+                flags = O_WRONLY | O_CREAT | O_APPEND; // a mode
+            }
+
+            int filedes = open(file_name, flags, 0644);
+            if (filedes < 0) {
+                perror("Error opening file: ");
+                exit(1);
+            }
 
             // Read from the pipe and write to the file
             nbytes = read(p[0], inbuf, 1023);
@@ -72,8 +79,7 @@ void execute_redirect(char *path, char **args, int mode, char *file_name, int ba
             exit(0);
         }
 
-    } else {
-        // Parent process
+    } else { // ------------------------------------------------------------- Parent process
         if (!background) {
             int status;
             waitpid(pid, &status, 0); // Wait for child process to finish
